@@ -5,7 +5,7 @@
 int main()
 {
     // Initialize the mmap allocator with a page size of 4096 bytes
-    mmap_init();
+    mmap_allocator_init();
 
     int debug_id = 1; // Example debug ID for tracking
     debug_print_mmap(debug_id++);
