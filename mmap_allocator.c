@@ -6,7 +6,7 @@
 #include <string.h>
 #include <stdio.h>
 
-struct memory_list mmap_list;
+struct mmap_memory_list mmap_list;
 
 /*
  * This function initializes the mmap allocator.
@@ -14,8 +14,8 @@ struct memory_list mmap_list;
  * and the page size for memory allocation.
  */
 
-void mmap_init() {
-    memset(&mmap_list, 0, sizeof(mmap_list));
+void mmap_allocator_init() {
+    memset(&mmap_list, 0, sizeof(struct mmap_memory_list));
     mmap_list.page_size = sysconf(_SC_PAGESIZE);
 }
 
@@ -97,6 +97,8 @@ void* allocate_mmap_block(size_t requested_size)
 /*
  * Free a memory block allocated with mmap.
  * This function removes the block from the mmap list and deallocates the memory.
+ * returns NULL if deallocation is successful
+ * reutrns DEALLOCATION_FAILED if deallocation fails
  */
 void* free_mmap_block(void *ptr)
 {
@@ -127,10 +129,10 @@ void* free_mmap_block(void *ptr)
             return DEALLOCATION_FAILED; // Indicate failure
         }
 
-        return ptr; // Return the original pointer
+        return NULL;
     }
     
-    return NULL;
+    return DEALLOCATION_FAILED;
 }
 
 void debug_print_mmap(int debug_id)

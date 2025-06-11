@@ -9,7 +9,7 @@
 #include <stdint.h>
 
 // heap_list is a global variable that holds the state of the heap.
-struct memory_list heap_list;
+struct heap_memory_list heap_list;
 
 /*
  * This function attempts to allocate a block of memory from the heap.
@@ -248,7 +248,7 @@ void* free_heap_block(void *ptr)
  */
 void heap_allocator_init()
 {
-    memset(&heap_list, 0, sizeof(struct memory_list));
+    memset(&heap_list, 0, sizeof(struct heap_memory_list));
 }
 
 

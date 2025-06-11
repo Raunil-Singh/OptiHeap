@@ -7,7 +7,7 @@
 #include <stddef.h>
 #include "memory_structs.h"
 
-struct memory_list {
+struct heap_memory_list {
     struct memory_header *head; // First block in all-blocks list
     struct memory_header *tail; // Last block in all-blocks list
     struct memory_header *free_head; // First block in free list
@@ -20,7 +20,7 @@ struct memory_list {
     size_t memory_size;
 };
 
-extern struct memory_list heap_list;
+extern struct heap_memory_list heap_list;
 
 void heap_allocator_init(void);
 void* allocate_heap_block(size_t size);
