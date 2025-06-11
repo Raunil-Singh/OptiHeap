@@ -40,6 +40,8 @@ void* optiheap_free(void* ptr)
 
     // This check does not ensure that the pointer is allocated in heap,
     // but it assures that it is not allocated using mmap.
+    // Note: A early check and later action continues to remain thread safe,
+    // because the heap doesn't shrink at any point in time.
     if(within_heap_range(ptr)) {
         return free_heap_block(ptr);
     } else {
