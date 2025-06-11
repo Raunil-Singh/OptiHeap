@@ -56,6 +56,7 @@ void* try_heap_allocation(size_t block_size)
     return result;
 }
 
+
 /*
  * This function inserts a block into the free list at the tail.
  * It updates the pointers accordingly to maintain the doubly linked list structure.
@@ -71,6 +72,7 @@ void insert_into_free_list(struct memory_header *block) {
         heap_list.free_head = block;
     }
 }
+
 
 /*
  * This function removes a block from the free list.
@@ -91,6 +93,7 @@ void remove_from_free_list(struct memory_header *block) {
     }
     block->next_free = block->prev_free = NULL;
 }
+
 
 /*
  * This function coalesces adjacent free blocks in the heap.
@@ -133,6 +136,7 @@ void coalesce_free_blocks(struct memory_header *block) {
     insert_into_free_list(block);
 }
  
+
 /*
  * This function allocates a block of memory from the heap.
  * It first checks the free list for a suitable block using a best-fit strategy.
@@ -237,6 +241,7 @@ void* allocate_heap_block(size_t requested_size)
     return allocation_ptr;
 }
 
+
 /*
  * This function frees a previously allocated block of memory.
  * It checks if the pointer is valid and if the block is currently allocated.
@@ -276,7 +281,6 @@ void* free_heap_block(void *ptr)
     pthread_mutex_unlock(&heap_mutex);
     return status; // Return NULL on successful deallocation, or DEALLOCATION_FAILED on error
 }
-
 
 
 void debug_print_heap(int debug_id)

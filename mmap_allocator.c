@@ -25,6 +25,7 @@ void mmap_allocator_init() {
     pthread_mutex_unlock(&mmap_mutex);
 }
 
+
 /*
  * Insert a block into the mmap list.
  * This function adds the block to the end of the list.
@@ -41,6 +42,7 @@ void insert_into_mmap_list(struct memory_header *block) {
         mmap_list.head = block;
     }
 }
+
 
 /*
  * Remove a block from the mmap list.
@@ -59,6 +61,7 @@ void remove_from_mmap_list(struct memory_header *block) {
         mmap_list.tail = block->prev;
     }
 }
+
 
 /*
  * Allocate a memory block using mmap.
@@ -81,12 +84,10 @@ void* allocate_mmap_block(size_t requested_size)
     
     struct memory_header *new_block = mmap(NULL, aligned_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
-
-
     if (new_block == MAP_FAILED)
     {
         fprintf(stderr, "Error: mmap failed to allocate %zu bytes\n", aligned_size);
-        allocation_ptr = ALLOCATION_FAILED; // Indicate failure
+        allocation_ptr = ALLOCATION_FAILED;
         goto END;
     }
 
@@ -99,16 +100,15 @@ void* allocate_mmap_block(size_t requested_size)
         mmap_list.head = new_block;
     }
 
-    // Insert the new block into the mmap list
     insert_into_mmap_list(new_block);
 
-    allocation_ptr = (void *)(new_block + 1); // Pointer to the data area
+    allocation_ptr = (void *)(new_block + 1);
 
     END:
-    // Release the mutex after the operation is complete
     pthread_mutex_unlock(&mmap_mutex);
     return allocation_ptr;
 }
+
 
 /*
  * Free a memory block allocated with mmap.
@@ -125,7 +125,6 @@ void* free_mmap_block(void *ptr)
 
     struct memory_header *block = (struct memory_header *)ptr - 1; // Get the header from the pointer
 
-    // Acquire the mutex to ensure thread safety
     pthread_mutex_lock(&mmap_mutex);
 
     struct memory_header *curr = mmap_list.head;
@@ -156,10 +155,10 @@ void* free_mmap_block(void *ptr)
     else status = DEALLOCATION_FAILED;
     
     END:
-    // Release the mutex after the operation is complete
     pthread_mutex_unlock(&mmap_mutex);
     return status;
 }
+
 
 void debug_print_mmap(int debug_id)
 {
