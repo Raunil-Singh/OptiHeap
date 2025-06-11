@@ -5,8 +5,12 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
+#include <pthread.h>
 
 struct mmap_memory_list mmap_list;
+
+static pthread_mutex_t mmap_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 
 /*
  * This function initializes the mmap allocator.
@@ -15,8 +19,10 @@ struct mmap_memory_list mmap_list;
  */
 
 void mmap_allocator_init() {
+    pthread_mutex_lock(&mmap_mutex);
     memset(&mmap_list, 0, sizeof(struct mmap_memory_list));
     mmap_list.page_size = sysconf(_SC_PAGESIZE);
+    pthread_mutex_unlock(&mmap_mutex);
 }
 
 /*
@@ -63,8 +69,12 @@ void* allocate_mmap_block(size_t requested_size)
 {
     if (requested_size == 0)
     {
-        return NULL; // No allocation for zero size
+        return NULL;
     }
+
+    pthread_mutex_lock(&mmap_mutex);
+
+    void * allocation_ptr = NULL;;
 
     // Here bitwise operations are used to align the size to the page size because page size is a power of two.
     size_t aligned_size = (requested_size + sizeof(struct memory_header) + mmap_list.page_size - 1) & ~(mmap_list.page_size - 1);
@@ -76,7 +86,8 @@ void* allocate_mmap_block(size_t requested_size)
     if (new_block == MAP_FAILED)
     {
         fprintf(stderr, "Error: mmap failed to allocate %zu bytes\n", aligned_size);
-        return ALLOCATION_FAILED; // Indicate failure
+        allocation_ptr = ALLOCATION_FAILED; // Indicate failure
+        goto END;
     }
 
     memset(new_block, 0, sizeof(struct memory_header));
@@ -91,7 +102,12 @@ void* allocate_mmap_block(size_t requested_size)
     // Insert the new block into the mmap list
     insert_into_mmap_list(new_block);
 
-    return (void *)(new_block + 1); // Return pointer to the data area
+    allocation_ptr = (void *)(new_block + 1); // Pointer to the data area
+
+    END:
+    // Release the mutex after the operation is complete
+    pthread_mutex_unlock(&mmap_mutex);
+    return allocation_ptr;
 }
 
 /*
@@ -109,15 +125,22 @@ void* free_mmap_block(void *ptr)
 
     struct memory_header *block = (struct memory_header *)ptr - 1; // Get the header from the pointer
 
+    // Acquire the mutex to ensure thread safety
+    pthread_mutex_lock(&mmap_mutex);
+
     struct memory_header *curr = mmap_list.head;
     while(curr && curr != block) {
         curr = curr->next;
     }
 
+    void * status = NULL;
+
     if(curr) {
         if (curr->magic != MMAP_ALLOCATED) {
             fprintf(stderr, "Error: Attempt to free a block that is not allocated or has been corrupted.\n");
-            return DEALLOCATION_FAILED;
+            pthread_mutex_unlock(&mmap_mutex);
+            status = DEALLOCATION_FAILED;
+            goto END;
         }
 
         // Remove the block from the mmap list
@@ -126,17 +149,21 @@ void* free_mmap_block(void *ptr)
         // Unmap the memory
         if (munmap(curr, curr->size + sizeof(struct memory_header)) == -1) {
             fprintf(stderr, "Error: munmap failed to deallocate memory.\n");
-            return DEALLOCATION_FAILED; // Indicate failure
+            status =  DEALLOCATION_FAILED; // Indicate failure
+            goto END;
         }
-
-        return NULL;
     }
+    else status = DEALLOCATION_FAILED;
     
-    return DEALLOCATION_FAILED;
+    END:
+    // Release the mutex after the operation is complete
+    pthread_mutex_unlock(&mmap_mutex);
+    return status;
 }
 
 void debug_print_mmap(int debug_id)
 {
+    pthread_mutex_lock(&mmap_mutex);
     struct memory_header *curr = mmap_list.head;
     printf("================================================================= START DEBUG_ID : %d\n", debug_id);
     printf("MMapped Memory State:\n");
@@ -149,4 +176,5 @@ void debug_print_mmap(int debug_id)
         curr = curr->next;
     }
     printf("================================================================= END DEBUG_ID : %d\n", debug_id);
+    pthread_mutex_unlock(&mmap_mutex);
 }
