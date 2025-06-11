@@ -27,6 +27,21 @@ void heap_allocator_init()
 
 
 /*
+ * This function checks if a pointer is within the range of the heap memory.
+ * It returns 1 if the pointer is within the heap range, otherwise returns 0.
+ */
+int within_heap_range(void *ptr)
+{
+    pthread_mutex_lock(&heap_mutex);
+    int result = 0;
+    if (ptr >= (void *)heap_list.memory_base && ptr < (void *)heap_list.memory_end) {
+        result = 1;
+    }
+    pthread_mutex_unlock(&heap_mutex);
+    return result;
+}
+
+/*
  * This function attempts to allocate a block of memory from the heap.
  * If the current heap does not have enough space, it will double the size of the heap
  * until it can accommodate the requested block size.
@@ -254,17 +269,16 @@ void* free_heap_block(void *ptr)
 
     struct memory_header *block = ((struct memory_header *)ptr) - 1;
 
-
     void * status = NULL; // store the status of deallocation
+
+    if (!within_heap_range(block)) {
+        fprintf(stderr, "Error: Attempt to free pointer %p in unallocated regions\n", ptr);
+        status = DEALLOCATION_FAILED; // Invalid pointer
+        return status;
+    }
 
     pthread_mutex_lock(&heap_mutex);
 
-    if ((void*)(block) < (void*)(heap_list.memory_base) || (void*)(block) >= (void*)(heap_list.memory_end)) {
-        fprintf(stderr, "Error: Attempt to free pointer %p in unallocated regions\n", ptr);
-        status = DEALLOCATION_FAILED; // Invalid pointer
-        goto END;
-    }
-    
     if (block->magic != HEAP_ALLOCATED) {
         fprintf(stderr, "Error: Attempt to free invalid or corrupted pointer %p\n", ptr);
         status = DEALLOCATION_FAILED;

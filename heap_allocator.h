@@ -25,6 +25,7 @@ extern struct heap_memory_list heap_list;
 void heap_allocator_init(void);
 void* allocate_heap_block(size_t size);
 void* free_heap_block(void* ptr);
+int within_heap_range(void *ptr);
 void debug_print_heap(int debug_id);
 
 #endif // HEAP_ALLOCATOR_H

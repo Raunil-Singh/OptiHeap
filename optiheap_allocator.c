@@ -40,7 +40,7 @@ void* optiheap_free(void* ptr)
 
     // This check does not ensure that the pointer is allocated in heap,
     // but it assures that it is not allocated using mmap.
-    if(ptr >= (void*)heap_list.memory_base && ptr < (void*)heap_list.memory_end) {
+    if(within_heap_range(ptr)) {
         return free_heap_block(ptr);
     } else {
         return free_mmap_block(ptr);
