@@ -1,9 +1,6 @@
 #include "mmap_allocator.h"
 #include "heap_allocator.h"
 
-#include <stdio.h>
-
-
 /*
  * This file implements the optiheap allocator, which is a memory allocator
  * that optimizes memory usage by combining mmap and heap allocation strategies.
@@ -28,12 +25,10 @@ void* optiheap_allocate(size_t size)
         return NULL; // No allocation for zero size
     }
 
-    // Use mmap for large allocations (greater than or equal to page size)
     if (size > MAX_HEAP_ALLOC_SIZE) {
-        return allocate_mmap_block(size);
+        return allocate_mmap_block(size); //  for large allocations
     } else {
-        // Use heap allocator for smaller allocations
-        return allocate_heap_block(size);
+        return allocate_heap_block(size); //  for smaller allocations
     }
 }
 
@@ -43,6 +38,8 @@ void* optiheap_free(void* ptr)
         return NULL; // No action for null pointer
     }
 
+    // This check does not ensure that the pointer is allocated in heap,
+    // but it assures that it is not allocated using mmap.
     if(ptr >= (void*)heap_list.memory_base && ptr < (void*)heap_list.memory_end) {
         return free_heap_block(ptr);
     } else {
