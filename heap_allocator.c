@@ -1,3 +1,6 @@
+#include "memory_structs.h"
+#include "heap_allocator.h"
+
 #include <limits.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -5,31 +8,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#define HEAP_FREED 0xDEADBEEF
-#define HEAP_ALLOCATED 0xCAFEBABE
-
-struct memory_header {
-    size_t size; // Size of the block
-    int32_t magic; // Magic number for allocation status and validation
-    struct memory_header *next; // Next in all-blocks list
-    struct memory_header *prev; // Prev in all-blocks list
-    struct memory_header *next_free; // Next in free list
-    struct memory_header *prev_free; // Prev in free list
-};
-
-struct memory_list {
-    struct memory_header *head; // First block in all-blocks list
-    struct memory_header *tail; // Last block in all-blocks list
-    struct memory_header *free_head; // First block in free list
-    struct memory_header *free_tail; // Last block in free list
-
-    // Memory region management
-    char *heap_base;
-    char *heap_curr;
-    char *heap_end;
-    size_t heap_size;
-};
-
+// heap_list is a global variable that holds the state of the heap.
 struct memory_list heap_list;
 
 /*
@@ -40,8 +19,8 @@ struct memory_list heap_list;
  */
 void* try_heap_allocation(size_t block_size)
 {
-    if (!heap_list.heap_base || (size_t)(heap_list.heap_end - heap_list.heap_curr) < block_size) {
-        size_t curr_size = heap_list.heap_size;
+    if (!heap_list.memory_base || (size_t)(heap_list.memory_end - heap_list.memory_curr) < block_size) {
+        size_t curr_size = heap_list.memory_size;
         size_t new_size = 2 * (curr_size + block_size);
         if (new_size < curr_size + block_size) {
             new_size = curr_size + block_size;
@@ -49,16 +28,16 @@ void* try_heap_allocation(size_t block_size)
         void* block = sbrk(new_size - curr_size);
         if (block == (void *)-1) {
             fprintf(stderr, "Error: sbrk failed to allocate %zu bytes\n", new_size - curr_size);
-            _exit(1);
+            return ALLOCATION_FAILED; // Indicate failure
         }
-        if (!heap_list.heap_base) {
-            heap_list.heap_base = heap_list.heap_curr = block;
+        if (!heap_list.memory_base) {
+            heap_list.memory_base = heap_list.memory_curr = block;
         }
-        heap_list.heap_end = heap_list.heap_base + new_size;
-        heap_list.heap_size = new_size;
+        heap_list.memory_end = heap_list.memory_base + new_size;
+        heap_list.memory_size = new_size;
     }
-    void* result = heap_list.heap_curr;
-    heap_list.heap_curr += block_size;
+    void* result = heap_list.memory_curr;
+    heap_list.memory_curr += block_size;
     return result;
 }
 
@@ -155,9 +134,7 @@ void* allocate_heap_block(size_t requested_size)
 
     // Align requested size to sizeof(struct memory_header)
     size_t aligned_blocks = (requested_size + sizeof(struct memory_header) - 1) / sizeof(struct memory_header);
-    
-    // The extra one is for the header to store metadata
-    size_t aligned_size = (aligned_blocks + 1) * sizeof(struct memory_header);
+    size_t aligned_size = (aligned_blocks) * sizeof(struct memory_header);
 
     // Best-fit search in free list
     struct memory_header *best_fit = NULL;
@@ -177,7 +154,7 @@ void* allocate_heap_block(size_t requested_size)
         size_t excess = best_fit->size - aligned_size;
         
         // if there's excess, we split the block to use the excess space later
-        if (excess) {
+        if (excess > sizeof(struct memory_header)) {
 
             // Modify the best_fit block
             remove_from_free_list(best_fit); // Remove from free list
@@ -185,17 +162,14 @@ void* allocate_heap_block(size_t requested_size)
             best_fit->size = aligned_size; // Set the size of the allocated block
             
             // Create a new free block for the excess space
-            struct memory_header *new_free = (struct memory_header *)((char *)(best_fit + 1) + aligned_size);
+            struct memory_header *new_free = (struct memory_header *)((char *)(best_fit) + aligned_size + sizeof(struct memory_header));
+            memset(new_free, 0, sizeof(struct memory_header)); // Initialize the new block
             new_free->size = excess - sizeof(struct memory_header);
             new_free->magic = HEAP_FREED;
             new_free->next = best_fit->next;
             new_free->prev = best_fit;
-            new_free->next_free = NULL;
-            new_free->prev_free = NULL;
-
+            
             insert_into_free_list(new_free);
-
-            best_fit->next = new_free;
 
             if (best_fit->next) {
                 best_fit->next->prev = new_free;
@@ -213,13 +187,19 @@ void* allocate_heap_block(size_t requested_size)
     }
 
     // No suitable free block, allocate new
-    struct memory_header *new_block = (struct memory_header *)try_heap_allocation(sizeof(struct memory_header) + aligned_size);
+    struct memory_header *new_block = (struct memory_header *)try_heap_allocation(aligned_size + sizeof(struct memory_header));
+    
+    if(new_block == ALLOCATION_FAILED) {
+        fprintf(stderr, "Error: Unable to allocate %zu bytes from heap\n", aligned_size + sizeof(struct memory_header));
+        return ALLOCATION_FAILED; // Allocation failed
+    }
+    
+    memset(new_block, 0, sizeof(struct memory_header)); // Initialize the new block
     new_block->magic = HEAP_ALLOCATED;
-    new_block->size = aligned_size;
-    new_block->next = NULL;
+    new_block->size = aligned_size; // Set the size of the allocated block
     new_block->prev = heap_list.tail;
-    new_block->next_free = NULL;
-    new_block->prev_free = NULL;
+
+
 
     if (heap_list.tail) {
         heap_list.tail->next = new_block;
@@ -238,25 +218,27 @@ void* allocate_heap_block(size_t requested_size)
  * If valid, it marks the block as free and attempts to coalesce it with adjacent free blocks.
  * It also updates the free list accordingly.
  */
-void free_heap_block(void *ptr)
+void* free_heap_block(void *ptr)
 {
-    if (!ptr) return;
+    if (!ptr) return NULL;
+
     struct memory_header *block = ((struct memory_header *)ptr) - 1;
 
-    if ((void*)(block) < (void*)(heap_list.heap_base) || (void*)(block) >= (void*)(heap_list.heap_end)) {
-        fprintf(stderr, "Error: Attempt to free invalid pointer %p\n", ptr);
-        _exit(1); // Invalid pointer
+    if ((void*)(block) < (void*)(heap_list.memory_base) || (void*)(block) >= (void*)(heap_list.memory_end)) {
+        fprintf(stderr, "Error: Attempt to free pointer %p in unallocated regions\n", ptr);
+        return DEALLOCATION_FAILED; // Invalid pointer
     }
     
     if (block->magic != HEAP_ALLOCATED) {
         fprintf(stderr, "Error: Attempt to free invalid or corrupted pointer %p\n", ptr);
-        _exit(1);
+        return DEALLOCATION_FAILED;
     }
 
     block->magic = HEAP_FREED; // This helps to identify the block as free
     
     // Coalesce with adjacent free blocks and insert into free list
     coalesce_free_blocks(block);
+    return NULL;
 }
 
 /*
@@ -269,19 +251,22 @@ void heap_allocator_init()
     memset(&heap_list, 0, sizeof(struct memory_list));
 }
 
-int main() {
-    heap_allocator_init();
 
-    int* arr = (int*)allocate_heap_block(10 * sizeof(int));
-    for(int i = 0; i < 10; i++) {
-        arr[i] = i;
+void debug_print_heap(int debug_id)
+{
+    struct memory_header *curr = heap_list.head;
+    printf("================================================================= START DEBUG_ID : %d\n", debug_id);
+    printf("Heap Memory State:\n");
+    printf("Heap Size: %zu bytes\n", heap_list.memory_size);
+    printf("Heap Start: %p - Heap End: %p\n", heap_list.memory_base, heap_list.memory_end);
+    while (curr) {
+        printf("Block at %p: \t State=%s \tdata_size=%zu, total_size=%zu\n",
+            (void*)curr,
+            curr->magic == HEAP_ALLOCATED ? "ALLOCATED" :
+            (curr->magic == HEAP_FREED ? "  FREE   " : "CORRUPTED"),
+            curr->size,
+            curr->size + sizeof(struct memory_header));
+        curr = curr->next;
     }
-    for(int i = 0; i < 100; i++) {
-        printf("%d ", arr[i]);
-    }
-    printf("\n");
-
-    free_heap_block(arr);   
-
-    return 0;
+    printf("================================================================= END DEBUG_ID : %d\n", debug_id);
 }
