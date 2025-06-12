@@ -13,14 +13,21 @@
 
 #define MAX_HEAP_ALLOC_SIZE (1024 * 128) // Define a threshold for heap allocation size
 
+static int setup_done = 0;
+
 void optiheap_allocator_init()
 {
     mmap_allocator_init();
     heap_allocator_init();
+    setup_done = 1; // Ensure initialization is done only once
 }
 
 void* optiheap_allocate(size_t size)
 {
+    if (!setup_done) {
+        optiheap_allocator_init();
+    }
+
     if (size == 0) {
         return NULL; // No allocation for zero size
     }
@@ -36,7 +43,7 @@ void* optiheap_free(void* ptr)
 {
     if (!ptr) {
         return NULL; // No action for null pointer
-    }
+    } 
 
     // This check does not ensure that the pointer is allocated in heap,
     // but it assures that it is not allocated using mmap.

@@ -1,30 +1,24 @@
-# VS Code settings
 .vscode/
 
-# Object files
 *.o
 
-# Dependency files
 *.d
 
-# Executables (Linux/Mac)
 *.out
 *.elf
 *.bin
 
-# Executables (Windows)
 *.exe
 
-# Static and shared libraries
 *.a
 *.so
 *.dll
 
-# Backup and temporary files
 *~
 *.swp
 *.tmp
 
-# Build directories
 /build/
 /dist/
+
+venv/

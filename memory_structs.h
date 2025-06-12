@@ -11,7 +11,7 @@
 
 struct memory_header {
     size_t size; // Size of the block
-    int32_t magic; // Magic number for allocation status and validation
+    uint32_t magic; // Magic number for allocation status and validation
     struct memory_header *next; // Next in all-blocks list
     struct memory_header *prev; // Prev in all-blocks list
     struct memory_header *next_free; // Next in free list

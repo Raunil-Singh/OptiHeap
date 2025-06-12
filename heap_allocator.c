@@ -9,6 +9,8 @@
 #include <stdint.h>
 #include <pthread.h>
 
+void *sbrk(intptr_t increment);
+ 
 struct heap_memory_list heap_list;
 
 static pthread_mutex_t heap_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -55,7 +57,7 @@ void* try_heap_allocation(size_t block_size)
         if (new_size < curr_size + block_size) {
             new_size = curr_size + block_size;
         }
-        void* block = sbrk(new_size - curr_size);
+        void* block = (void *)sbrk(new_size - curr_size);
         if (block == (void *)-1) {
             fprintf(stderr, "Error: sbrk failed to allocate %zu bytes\n", new_size - curr_size);
             return ALLOCATION_FAILED; // Indicate failure

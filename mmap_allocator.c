@@ -106,7 +106,7 @@ void* allocate_mmap_block(size_t requested_size)
 
     END:
     pthread_mutex_unlock(&mmap_mutex);
-    return allocation_ptr;
+    return allocation_ptr; 
 }
 
 

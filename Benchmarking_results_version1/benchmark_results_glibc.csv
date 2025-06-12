@@ -1,0 +1,12 @@
+Test,Allocator,Time_ms,Total_Operations,KOps_per_sec,Peak_Memory_MB,Total_Allocated_MB,Total_Freed_MB
+Small_Sequential,glibc,466.98,2000000,4282.86,496.54,496.54,496.54
+Medium_Sequential,glibc,1794.54,200000,111.45,3174.89,3174.89,3174.89
+Large_Sequential,glibc,3096.57,20000,6.46,5257.12,5257.12,5257.12
+Mixed_Sequential,glibc,6884.71,49364,7.17,12288.00,12288.00,12288.00
+Small_Random,glibc,12446.90,624996,50.21,61.98,154.91,154.91
+Medium_Random,glibc,423.30,62494,147.63,399.94,994.79,994.79
+Large_Random,glibc,492.81,6246,12.67,670.50,1662.89,1662.89
+Mixed_Random,glibc,2300.66,31250,13.58,3122.61,7790.32,7790.32
+Small_Fragmentation,glibc,20.74,400000,19288.23,0.52,99.20,99.20
+Medium_Fragmentation,glibc,62.81,40000,636.84,32.81,632.72,632.72
+Large_Fragmentation,glibc,219.92,4000,18.19,277.89,559.47,559.47
