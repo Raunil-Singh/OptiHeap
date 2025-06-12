@@ -11,7 +11,7 @@ int main()
     debug_print_mmap(debug_id++);
 
     // 2
-    void *a = allocate_mmap_block(300);
+    void *a = allocate_mmap_block(1024 * 1024 * 1024 * 8ULL); // Allocate 4 GB
     debug_print_mmap(debug_id++);
 
     // 3
