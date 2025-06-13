@@ -7,7 +7,7 @@
 #include <sys/resource.h>
 #include <assert.h>
 #include <stdint.h>
-
+// #define USE_OPTIHEAP // FLAG to use OptiHeap allocator
 #ifdef USE_OPTIHEAP
 #include "optiheap_allocator.h"
 #define MALLOC(size) optiheap_allocate(size)
@@ -400,6 +400,9 @@ int main(int argc, char* argv[]) {
     
     size_t num_configs = sizeof(configs) / sizeof(configs[0]);
     
+    // Optional: Only run a specific test if given as argument
+    const char* only_test = (argc > 1) ? argv[1] : NULL;
+    
     // Create output filename
     char filename[256];
     snprintf(filename, sizeof(filename), "benchmark_results_%s.csv", ALLOCATOR_NAME);
@@ -418,6 +421,7 @@ int main(int argc, char* argv[]) {
     
     // Run benchmarks
     for (size_t i = 0; i < num_configs; i++) {
+        if (only_test && strcmp(configs[i].name, only_test) != 0) continue;
         benchmark_result_t result;
         
         if (strstr(configs[i].name, "Sequential")) {

@@ -9,11 +9,12 @@
 #include <stdint.h>
 #include <pthread.h>
 
-void *sbrk(intptr_t increment);
+void *sbrk(intptr_t increment); 
  
 struct heap_memory_list heap_list;
 
 static pthread_mutex_t heap_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 
 /*
  * This function initializes the heap allocator.
@@ -42,6 +43,7 @@ int within_heap_range(void *ptr)
     pthread_mutex_unlock(&heap_mutex);
     return result;
 }
+
 
 /*
  * This function attempts to allocate a block of memory from the heap.
@@ -75,18 +77,36 @@ void* try_heap_allocation(size_t block_size)
 
 
 /*
+ * This function calculates the size class for a given size.
+ * It determines which free list the block should belong to based on its size.
+ * The size classes are defined in a way that each class can hold blocks of a certain size range.
+ */
+size_t get_size_class(size_t size) {
+    size_t size_class = 0;
+    while(size_class < NUM_SIZE_CLASSES && size > ((sizeof(struct memory_header)*2) << (size_class+1))) {
+        size_class++;
+    }
+    if (size_class >= NUM_SIZE_CLASSES) {
+        size_class = NUM_SIZE_CLASSES - 1; // Cap at the last size class
+    }
+    return size_class;
+}
+
+
+/*
  * This function inserts a block into the free list at the tail.
  * It updates the pointers accordingly to maintain the doubly linked list structure.
  */
 void insert_into_free_list(struct memory_header *block) {
+    size_t class = get_size_class(block->size);
     block->next_free = NULL;
-    block->prev_free = heap_list.free_tail;
-    if (heap_list.free_tail) {
-        heap_list.free_tail->next_free = block;
+    block->prev_free = heap_list.free_tail[class];
+    if (heap_list.free_tail[class]) {
+        heap_list.free_tail[class]->next_free = block;
     }
-    heap_list.free_tail = block;
-    if (!heap_list.free_head) {
-        heap_list.free_head = block;
+    heap_list.free_tail[class] = block;
+    if (!heap_list.free_head[class]) {
+        heap_list.free_head[class] = block;
     }
 }
 
@@ -98,15 +118,16 @@ void insert_into_free_list(struct memory_header *block) {
  * It sets the next_free and prev_free pointers of the block to NULL since it is no longer a part of free list.
  */
 void remove_from_free_list(struct memory_header *block) {
+    size_t class = get_size_class(block->size);
     if (block->prev_free) {
         block->prev_free->next_free = block->next_free;
     } else {
-        heap_list.free_head = block->next_free;
+        heap_list.free_head[class] = block->next_free;
     }
     if (block->next_free) {
         block->next_free->prev_free = block->prev_free;
     } else {
-        heap_list.free_tail = block->prev_free;
+        heap_list.free_tail[class] = block->prev_free;
     }
     block->next_free = block->prev_free = NULL;
 }
@@ -121,6 +142,7 @@ void remove_from_free_list(struct memory_header *block) {
  */
 void coalesce_free_blocks(struct memory_header *block) {
     
+    remove_from_free_list(block); // Remove the block from the free list
     // Check and merge with previous block if it is free
     if (block->prev && block->prev->magic == HEAP_FREED) {
         struct memory_header *prev = block->prev;
@@ -176,54 +198,56 @@ void* allocate_heap_block(size_t requested_size)
 
     pthread_mutex_lock(&heap_mutex);
 
-    // Best-fit search in free list
-    struct memory_header *best_fit = NULL;
-    size_t best_fit_size = SIZE_MAX;
-    struct memory_header *curr = heap_list.free_head;
+    // The use of extra sizeof(struct memory_header) helps in ensuring that
+    // the first block that we encounter in the free list is large enough
+    size_t class = get_size_class(aligned_size + (aligned_size >> 1));
+
+    struct memory_header *first_fit = NULL;
+
+    // First-fit search: look for the first block in any suitable class
+    for (size_t c = class; c < NUM_SIZE_CLASSES; ++c) {
+    struct memory_header *curr = heap_list.free_head[c];
     while (curr) {
         if (curr->magic == HEAP_FREED && curr->size >= aligned_size) {
-            if (curr->size < best_fit_size) {
-                best_fit = curr;
-                best_fit_size = curr->size;
-            }
+            first_fit = curr;
+            break;
         }
         curr = curr->next_free;
     }
+    if (first_fit) break;
+}
 
-    if (best_fit) {
-        size_t excess = best_fit->size - aligned_size;
+    if (first_fit) {
+        size_t excess = first_fit->size - aligned_size;
+        
+        remove_from_free_list(first_fit); // Remove from free list
+        first_fit->magic = HEAP_ALLOCATED; // Mark as allocated
         
         // if there's excess, we split the block to use the excess space later
-        if (excess > sizeof(struct memory_header)) {
+        if (excess > 2*sizeof(struct memory_header)) {
 
             // Modify the best_fit block
-            remove_from_free_list(best_fit); // Remove from free list
-            best_fit->magic = HEAP_ALLOCATED; // Mark as allocated
-            best_fit->size = aligned_size; // Set the size of the allocated block
+            first_fit->size = aligned_size; // Set the size of the allocated block
             
             // Create a new free block for the excess space
-            struct memory_header *new_free = (struct memory_header *)((char *)(best_fit) + aligned_size + sizeof(struct memory_header));
+            struct memory_header *new_free = (struct memory_header *)((char *)(first_fit) + sizeof(struct memory_header) + aligned_size);
             memset(new_free, 0, sizeof(struct memory_header)); // Initialize the new block
             new_free->size = excess - sizeof(struct memory_header);
             new_free->magic = HEAP_FREED;
-            new_free->next = best_fit->next;
-            new_free->prev = best_fit;
+            new_free->next = first_fit->next;
+            new_free->prev = first_fit;
             
             insert_into_free_list(new_free);
 
-            if (best_fit->next) {
-                best_fit->next->prev = new_free;
+            if (first_fit->next) {
+                first_fit->next->prev = new_free;
             } else {
                 heap_list.tail = new_free;
             }
-            best_fit->next = new_free;
+            first_fit->next = new_free;
         }
-        else {
-            // execution comes here if no excess space
-            best_fit->magic = HEAP_ALLOCATED;
-            remove_from_free_list(best_fit);
-        }
-        allocation_ptr = (void *)(best_fit + 1);
+
+        allocation_ptr = (void *)(first_fit + 1);
         goto END;
     }
 
@@ -282,12 +306,15 @@ void* free_heap_block(void *ptr)
     pthread_mutex_lock(&heap_mutex);
 
     if (block->magic != HEAP_ALLOCATED) {
+        fprintf(stderr, "Error: Magic Number -> %x, expected %x for pointer %p\n", 
+                block->magic, HEAP_ALLOCATED, ptr);
         fprintf(stderr, "Error: Attempt to free invalid or corrupted pointer %p\n", ptr);
         status = DEALLOCATION_FAILED;
         goto END;
     }
 
     block->magic = HEAP_FREED; // This helps to identify the block as free
+    insert_into_free_list(block); // Insert into free list
     
     // Coalesce with adjacent free blocks and insert into free list
     coalesce_free_blocks(block);

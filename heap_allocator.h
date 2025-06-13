@@ -7,18 +7,22 @@
 #include <stddef.h>
 #include "memory_structs.h"
 
+#define NUM_SIZE_CLASSES 11 // Number of free lists for different sizes
+
+// Class sizes: 0: 96, 1: 192, 2: 384, 3: 768, 4: 1536, 5: 3072, 6: 6144, 7: 12288, 8: 24576, 9: 49152, 10: 98304
+
 struct heap_memory_list {
     struct memory_header *head; // First block in all-blocks list
     struct memory_header *tail; // Last block in all-blocks list
-    struct memory_header *free_head; // First block in free list
-    struct memory_header *free_tail; // Last block in free list
+    struct memory_header *free_head[NUM_SIZE_CLASSES]; // First blocks in free lists
+    struct memory_header *free_tail[NUM_SIZE_CLASSES]; // Last blocks in free lists
 
     // Memory region management
     char *memory_base;
     char *memory_curr;
     char *memory_end;
     size_t memory_size;
-};
+}; 
 
 extern struct heap_memory_list heap_list;
 
