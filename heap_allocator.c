@@ -200,22 +200,16 @@ void* allocate_heap_block(size_t requested_size)
 
     // The use of extra sizeof(struct memory_header) helps in ensuring that
     // the first block that we encounter in the free list is large enough
-    size_t class = get_size_class(aligned_size + (aligned_size >> 1));
+    size_t class = get_size_class(aligned_size) + 1;
 
     struct memory_header *first_fit = NULL;
 
     // First-fit search: look for the first block in any suitable class
     for (size_t c = class; c < NUM_SIZE_CLASSES; ++c) {
-    struct memory_header *curr = heap_list.free_head[c];
-    while (curr) {
-        if (curr->magic == HEAP_FREED && curr->size >= aligned_size) {
-            first_fit = curr;
-            break;
-        }
-        curr = curr->next_free;
+        if (!heap_list.free_head[c]) continue;
+        first_fit = heap_list.free_head[c];
+        break;
     }
-    if (first_fit) break;
-}
 
     if (first_fit) {
         size_t excess = first_fit->size - aligned_size;
