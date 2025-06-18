@@ -114,7 +114,7 @@ void* allocate_mmap_block(size_t requested_size)
  * Free a memory block allocated with mmap.
  * This function removes the block from the mmap list and deallocates the memory.
  * returns NULL if deallocation is successful
- * reutrns DEALLOCATION_FAILED if deallocation fails
+ * returns DEALLOCATION_FAILED if deallocation fails
  */
 void* free_mmap_block(void *ptr)
 {
@@ -123,16 +123,17 @@ void* free_mmap_block(void *ptr)
         return NULL; // No action for null pointer
     }
 
+    void * status = NULL; // Default to NULL for successful deallocation
     struct memory_header *block = (struct memory_header *)ptr - 1; // Get the header from the pointer
 
     pthread_mutex_lock(&mmap_mutex);
+
+    #ifdef DEBUGGER
 
     struct memory_header *curr = mmap_list.head;
     while(curr && curr != block) {
         curr = curr->next;
     }
-
-    void * status = NULL;
 
     if(curr) {
         if (curr->magic != MMAP_ALLOCATED) {
@@ -154,6 +155,15 @@ void* free_mmap_block(void *ptr)
     }
     else status = DEALLOCATION_FAILED;
     
+    #else
+    
+    if (munmap(block, block->size + sizeof(struct memory_header)) == -1) {
+        status =  DEALLOCATION_FAILED;
+        goto END;
+    }
+
+    #endif
+
     END:
     pthread_mutex_unlock(&mmap_mutex);
     return status;
