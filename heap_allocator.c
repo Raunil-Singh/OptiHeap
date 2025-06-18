@@ -322,6 +322,7 @@ void* free_heap_block(void *ptr)
 
 void debug_print_heap(int debug_id)
 {
+    #ifdef DEBUGGER
     pthread_mutex_lock(&heap_mutex);
     struct memory_header *curr = heap_list.head;
     printf("================================================================= START DEBUG_ID : %d\n", debug_id);
@@ -339,4 +340,5 @@ void debug_print_heap(int debug_id)
     }
     printf("================================================================= END DEBUG_ID : %d\n", debug_id);
     pthread_mutex_unlock(&heap_mutex);
+    #endif
 }

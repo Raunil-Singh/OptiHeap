@@ -172,6 +172,7 @@ void* free_mmap_block(void *ptr)
 
 void debug_print_mmap(int debug_id)
 {
+    #ifdef DEBUGGER
     pthread_mutex_lock(&mmap_mutex);
     struct memory_header *curr = mmap_list.head;
     printf("================================================================= START DEBUG_ID : %d\n", debug_id);
@@ -186,4 +187,5 @@ void debug_print_mmap(int debug_id)
     }
     printf("================================================================= END DEBUG_ID : %d\n", debug_id);
     pthread_mutex_unlock(&mmap_mutex);
+    #endif
 }
