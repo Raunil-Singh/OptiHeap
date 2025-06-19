@@ -168,6 +168,7 @@ void* free_mmap_block(void *ptr)
     
     #else
     
+    remove_from_mmap_list(block);
     if (munmap(block, block->size + sizeof(struct memory_header)) == -1) {
         status =  DEALLOCATION_FAILED;
         goto END;
