@@ -361,5 +361,7 @@ void debug_print_heap([[maybe_unused]]int debug_id)
     #ifdef THREAD_SAFE
     pthread_mutex_unlock(&heap_mutex);
     #endif
+    #else
+    printf("Warning: OptiHeap Debugger is disabled. Enable it by compiling with -DOPTIHEAP_DEBUGGER flag to see heap state.\n");
     #endif
 }

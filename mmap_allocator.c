@@ -207,5 +207,7 @@ void debug_print_mmap([[maybe_unused]]int debug_id)
     #ifdef THREAD_SAFE
     pthread_mutex_unlock(&mmap_mutex);
     #endif
+    #else
+    printf("Warning: OptiHeap Debugger is disabled. Enable it by compiling with -DOPTIHEAP_DEBUGGER flag to see mmap state.\n");
     #endif
 }
