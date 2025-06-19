@@ -9,8 +9,9 @@
 
 struct mmap_memory_list mmap_list;
 
+#ifdef THREAD_SAFE
 static pthread_mutex_t mmap_mutex = PTHREAD_MUTEX_INITIALIZER;
-
+#endif
 
 /*
  * This function initializes the mmap allocator.
@@ -19,10 +20,14 @@ static pthread_mutex_t mmap_mutex = PTHREAD_MUTEX_INITIALIZER;
  */
 
 void mmap_allocator_init() {
+    #ifdef THREAD_SAFE
     pthread_mutex_lock(&mmap_mutex);
+    #endif
     memset(&mmap_list, 0, sizeof(struct mmap_memory_list));
     mmap_list.page_size = sysconf(_SC_PAGESIZE);
+    #ifdef THREAD_SAFE
     pthread_mutex_unlock(&mmap_mutex);
+    #endif
 }
 
 
@@ -75,7 +80,9 @@ void* allocate_mmap_block(size_t requested_size)
         return NULL;
     }
 
+    #ifdef THREAD_SAFE
     pthread_mutex_lock(&mmap_mutex);
+    #endif
 
     void * allocation_ptr = NULL;;
 
@@ -105,7 +112,9 @@ void* allocate_mmap_block(size_t requested_size)
     allocation_ptr = (void *)(new_block + 1);
 
     END:
+    #ifdef THREAD_SAFE
     pthread_mutex_unlock(&mmap_mutex);
+    #endif
     return allocation_ptr; 
 }
 
@@ -126,9 +135,11 @@ void* free_mmap_block(void *ptr)
     void * status = NULL; // Default to NULL for successful deallocation
     struct memory_header *block = (struct memory_header *)ptr - 1; // Get the header from the pointer
 
+    #ifdef THREAD_SAFE
     pthread_mutex_lock(&mmap_mutex);
+    #endif
 
-    #ifdef DEBUGGER
+    #ifdef OPTIHEAP_DEBUGGER
 
     struct memory_header *curr = mmap_list.head;
     while(curr && curr != block) {
@@ -165,15 +176,19 @@ void* free_mmap_block(void *ptr)
     #endif
 
     END:
+    #ifdef THREAD_SAFE
     pthread_mutex_unlock(&mmap_mutex);
+    #endif
     return status;
 }
 
 
 void debug_print_mmap(int debug_id)
 {
-    #ifdef DEBUGGER
+    #ifdef OPTIHEAP_DEBUGGER
+    #ifdef THREAD_SAFE
     pthread_mutex_lock(&mmap_mutex);
+    #endif
     struct memory_header *curr = mmap_list.head;
     printf("================================================================= START DEBUG_ID : %d\n", debug_id);
     printf("MMapped Memory State:\n");
@@ -186,6 +201,8 @@ void debug_print_mmap(int debug_id)
         curr = curr->next;
     }
     printf("================================================================= END DEBUG_ID : %d\n", debug_id);
+    #ifdef THREAD_SAFE
     pthread_mutex_unlock(&mmap_mutex);
+    #endif
     #endif
 }

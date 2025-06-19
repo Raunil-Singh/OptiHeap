@@ -13,8 +13,9 @@ void *sbrk(intptr_t increment);
  
 struct heap_memory_list heap_list;
 
+#ifdef THREAD_SAFE
 static pthread_mutex_t heap_mutex = PTHREAD_MUTEX_INITIALIZER;
-
+#endif
 
 /*
  * This function initializes the heap allocator.
@@ -23,9 +24,13 @@ static pthread_mutex_t heap_mutex = PTHREAD_MUTEX_INITIALIZER;
  */
 void heap_allocator_init()
 {
+    #ifdef THREAD_SAFE
     pthread_mutex_lock(&heap_mutex);
+    #endif
     memset(&heap_list, 0, sizeof(struct heap_memory_list));
+    #ifdef THREAD_SAFE
     pthread_mutex_unlock(&heap_mutex);
+    #endif
 }
 
 
@@ -35,12 +40,16 @@ void heap_allocator_init()
  */
 int within_heap_range(void *ptr)
 {
+    #ifdef THREAD_SAFE
     pthread_mutex_lock(&heap_mutex);
+    #endif
     int result = 0;
     if (ptr >= (void *)heap_list.memory_base && ptr < (void *)heap_list.memory_end) {
         result = 1;
     }
+    #ifdef THREAD_SAFE
     pthread_mutex_unlock(&heap_mutex);
+    #endif
     return result;
 }
 
@@ -196,7 +205,9 @@ void* allocate_heap_block(size_t requested_size)
     size_t aligned_blocks = (requested_size + sizeof(struct memory_header) - 1) / sizeof(struct memory_header);
     size_t aligned_size = (aligned_blocks) * sizeof(struct memory_header);
 
+    #ifdef THREAD_SAFE
     pthread_mutex_lock(&heap_mutex);
+    #endif
 
     // The use of extra sizeof(struct memory_header) helps in ensuring that
     // the first block that we encounter in the free list is large enough
@@ -272,7 +283,9 @@ void* allocate_heap_block(size_t requested_size)
     allocation_ptr = (void *)(new_block + 1); // Return pointer to the data area
 
     END:
+    #ifdef THREAD_SAFE
     pthread_mutex_unlock(&heap_mutex);
+    #endif
     return allocation_ptr;
 }
 
@@ -297,7 +310,9 @@ void* free_heap_block(void *ptr)
         return status;
     }
 
+    #ifdef THREAD_SAFE
     pthread_mutex_lock(&heap_mutex);
+    #endif
 
     if (block->magic != HEAP_ALLOCATED) {
         fprintf(stderr, "Error: Magic Number -> %x, expected %x for pointer %p\n", 
@@ -315,15 +330,19 @@ void* free_heap_block(void *ptr)
     status = NULL;
 
     END:
+    #ifdef THREAD_SAFE
     pthread_mutex_unlock(&heap_mutex);
+    #endif
     return status; // Return NULL on successful deallocation, or DEALLOCATION_FAILED on error
 }
 
 
 void debug_print_heap(int debug_id)
 {
-    #ifdef DEBUGGER
+    #ifdef OPTIHEAP_DEBUGGER
+    #ifdef THREAD_SAFE
     pthread_mutex_lock(&heap_mutex);
+    #endif
     struct memory_header *curr = heap_list.head;
     printf("================================================================= START DEBUG_ID : %d\n", debug_id);
     printf("Heap Memory State:\n");
@@ -339,6 +358,8 @@ void debug_print_heap(int debug_id)
         curr = curr->next;
     }
     printf("================================================================= END DEBUG_ID : %d\n", debug_id);
+    #ifdef THREAD_SAFE
     pthread_mutex_unlock(&heap_mutex);
+    #endif
     #endif
 }
