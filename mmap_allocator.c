@@ -149,7 +149,9 @@ void* free_mmap_block(void *ptr)
     if(curr) {
         if (curr->magic != MMAP_ALLOCATED) {
             fprintf(stderr, "Error: Attempt to free a block that is not allocated or has been corrupted.\n");
+            #ifdef THREAD_SAFE
             pthread_mutex_unlock(&mmap_mutex);
+            #endif
             status = DEALLOCATION_FAILED;
             goto END;
         }
@@ -184,7 +186,7 @@ void* free_mmap_block(void *ptr)
 }
 
 
-void debug_print_mmap(int debug_id)
+void debug_print_mmap([[maybe_unused]]int debug_id)
 {
     #ifdef OPTIHEAP_DEBUGGER
     #ifdef THREAD_SAFE

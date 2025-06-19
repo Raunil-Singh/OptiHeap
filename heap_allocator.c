@@ -337,7 +337,7 @@ void* free_heap_block(void *ptr)
 }
 
 
-void debug_print_heap(int debug_id)
+void debug_print_heap([[maybe_unused]]int debug_id)
 {
     #ifdef OPTIHEAP_DEBUGGER
     #ifdef THREAD_SAFE
