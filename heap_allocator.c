@@ -9,6 +9,8 @@
 #include <stdint.h>
 #include <pthread.h>
 
+#define GROWTH_FACTOR 3
+
 void *sbrk(intptr_t increment); 
  
 struct heap_memory_list heap_list;
@@ -64,7 +66,7 @@ void* try_heap_allocation(size_t block_size)
 {
     if (!heap_list.memory_base || (size_t)(heap_list.memory_end - heap_list.memory_curr) < block_size) {
         size_t curr_size = heap_list.memory_size;
-        size_t new_size = 2 * (curr_size + block_size);
+        size_t new_size = GROWTH_FACTOR * (curr_size + block_size);
         if (new_size < curr_size + block_size) {
             new_size = curr_size + block_size;
         }
@@ -151,7 +153,6 @@ void remove_from_free_list(struct memory_header *block) {
  */
 void coalesce_free_blocks(struct memory_header *block) {
     
-    remove_from_free_list(block); // Remove the block from the free list
     // Check and merge with previous block if it is free
     if (block->prev && block->prev->magic == HEAP_FREED) {
         struct memory_header *prev = block->prev;
@@ -323,7 +324,6 @@ void* free_heap_block(void *ptr)
     }
 
     block->magic = HEAP_FREED; // This helps to identify the block as free
-    insert_into_free_list(block); // Insert into free list
     
     // Coalesce with adjacent free blocks and insert into free list
     coalesce_free_blocks(block);
