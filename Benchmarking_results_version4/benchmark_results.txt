@@ -1,0 +1,131 @@
+======================================
+  Memory Allocator Benchmark Suite   
+======================================
+
+Checking required files...
+All required files found.
+
+Cleaning previous builds...
+Cleanup completed.
+
+Compiling glibc malloc benchmark...
+glibc benchmark compiled successfully.
+
+Compiling OptiHeap benchmark...
+heap_allocator.c: In function ‘debug_print_heap’:
+heap_allocator.c:341:27: warning: unused parameter ‘debug_id’ [-Wunused-parameter]
+  341 | void debug_print_heap(int debug_id)
+      |                       ~~~~^~~~~~~~
+mmap_allocator.c: In function ‘debug_print_mmap’:
+mmap_allocator.c:187:27: warning: unused parameter ‘debug_id’ [-Wunused-parameter]
+  187 | void debug_print_mmap(int debug_id)
+      |                       ~~~~^~~~~~~~
+OptiHeap benchmark compiled successfully.
+
+Checking system resources...
+Total Memory: 15683MB
+Available Memory: 13934MB
+Available Disk Space: 10356MB
+Warning: Available memory (13934MB) may be insufficient for 12GB benchmark!
+Continue anyway? (y/N): 
+y
+Warning: Available disk space (10356MB) may be insufficient!
+Continue anyway? (y/N): 
+y
+
+Starting benchmark execution...
+
+Running glibc malloc benchmark...
+This may take several minutes depending on system performance.
+Starting benchmark suite for glibc allocator
+Memory limit: 12.00 GB
+Output file: benchmark_results_glibc.csv
+
+Running Small_Sequential test with glibc allocator...
+  Small_Sequential: 438.85 ms, 4557.32 KOps/sec, Peak: 495.8 MB
+Running Medium_Sequential test with glibc allocator...
+  Medium_Sequential: 1737.88 ms, 115.08 KOps/sec, Peak: 3176.8 MB
+Running Large_Sequential test with glibc allocator...
+  Large_Sequential: 3084.09 ms, 6.48 KOps/sec, Peak: 5316.3 MB
+Running Mixed_Sequential test with glibc allocator...
+  Mixed_Sequential: 6814.54 ms, 7.19 KOps/sec, Peak: 12288.0 MB
+Running Small_Random test with glibc allocator...
+  Small_Random: 12442.34 ms, 50.23 KOps/sec, Peak: 61.9 MB
+Running Medium_Random test with glibc allocator...
+  Medium_Random: 406.77 ms, 153.65 KOps/sec, Peak: 396.8 MB
+Running Large_Random test with glibc allocator...
+  Large_Random: 473.63 ms, 13.20 KOps/sec, Peak: 661.2 MB
+Running Mixed_Random test with glibc allocator...
+  Mixed_Random: 2278.00 ms, 13.72 KOps/sec, Peak: 3118.4 MB
+Running Small_Fragmentation test with glibc allocator...
+  Small_Fragmentation: 24.27 ms, 16482.07 KOps/sec, Peak: 0.5 MB
+Running Medium_Fragmentation test with glibc allocator...
+  Medium_Fragmentation: 65.79 ms, 607.99 KOps/sec, Peak: 33.1 MB
+Running Large_Fragmentation test with glibc allocator...
+  Large_Fragmentation: 230.91 ms, 17.32 KOps/sec, Peak: 282.6 MB
+
+Benchmark completed. Results written to benchmark_results_glibc.csv
+glibc malloc benchmark completed successfully.
+
+Running OptiHeap benchmark...
+This may take several minutes depending on system performance.
+Starting benchmark suite for OptiHeap allocator
+Memory limit: 12.00 GB
+Output file: benchmark_results_OptiHeap.csv
+
+Running Small_Sequential test with OptiHeap allocator...
+  Small_Sequential: 381.93 ms, 5236.60 KOps/sec, Peak: 495.8 MB
+Running Medium_Sequential test with OptiHeap allocator...
+  Medium_Sequential: 1387.30 ms, 144.16 KOps/sec, Peak: 3179.6 MB
+Running Large_Sequential test with OptiHeap allocator...
+  Large_Sequential: 2758.18 ms, 7.25 KOps/sec, Peak: 5323.9 MB
+Running Mixed_Sequential test with OptiHeap allocator...
+  Mixed_Sequential: 7789.87 ms, 6.31 KOps/sec, Peak: 12288.0 MB
+Running Small_Random test with OptiHeap allocator...
+  Small_Random: 13369.60 ms, 46.75 KOps/sec, Peak: 62.1 MB
+Running Medium_Random test with OptiHeap allocator...
+  Medium_Random: 2844.13 ms, 21.97 KOps/sec, Peak: 397.2 MB
+Running Large_Random test with OptiHeap allocator...
+  Large_Random: 990.97 ms, 6.30 KOps/sec, Peak: 677.3 MB
+Running Mixed_Random test with OptiHeap allocator...
+  Mixed_Random: 4329.18 ms, 7.22 KOps/sec, Peak: 3136.1 MB
+Running Small_Fragmentation test with OptiHeap allocator...
+  Small_Fragmentation: 25.63 ms, 15605.44 KOps/sec, Peak: 0.5 MB
+Running Medium_Fragmentation test with OptiHeap allocator...
+  Medium_Fragmentation: 65.85 ms, 607.40 KOps/sec, Peak: 32.3 MB
+Running Large_Fragmentation test with OptiHeap allocator...
+  Large_Fragmentation: 298.15 ms, 13.42 KOps/sec, Peak: 286.1 MB
+
+Benchmark completed. Results written to benchmark_results_OptiHeap.csv
+OptiHeap benchmark completed successfully.
+
+Combining results...
+Combined results saved to combined_benchmark_results.csv
+
+=== BENCHMARK SUMMARY ===
+
+Performance Summary:
+===================
+Average Performance (KOps/sec):
+  glibc malloc: 2002.20
+  OptiHeap:     1972.98
+  OptiHeap is 1.5% slower on average
+
+Average Peak Memory Usage (MB):
+  glibc malloc: 2348.31
+  OptiHeap:     2352.62
+  OptiHeap uses 0.2% more memory on average
+
+Total tests completed: 22
+Results saved to: combined_benchmark_results.csv
+
+=== FILES GENERATED ===
+-rw-rw-r-- 1 raunil-singh raunil-singh  815 Jun 19 13:37 benchmark_results_glibc.csv
+-rw-rw-r-- 1 raunil-singh raunil-singh  846 Jun 19 13:38 benchmark_results_OptiHeap.csv
+-rw-rw-r-- 1 raunil-singh raunil-singh 1.6K Jun 19 13:38 combined_benchmark_results.csv
+
+Benchmark suite completed!
+You can now use the CSV files to generate graphs for your GitHub repo.
+
+Cleaning up executables...
+Cleanup completed.

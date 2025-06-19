@@ -1,0 +1,12 @@
+Test,Allocator,Time_ms,Total_Operations,KOps_per_sec,Peak_Memory_MB,Total_Allocated_MB,Total_Freed_MB
+Small_Sequential,OptiHeap,404.94,2000000,4938.95,495.40,495.40,495.40
+Medium_Sequential,OptiHeap,1315.22,200000,152.07,3166.31,3166.31,3166.31
+Large_Sequential,OptiHeap,2598.46,20000,7.70,5336.36,5336.36,5336.36
+Mixed_Sequential,OptiHeap,7248.95,49116,6.78,12288.00,12288.00,12288.00
+Small_Random,OptiHeap,12321.46,624986,50.72,62.03,154.99,154.99
+Medium_Random,OptiHeap,1842.38,62498,33.92,401.49,994.19,994.19
+Large_Random,OptiHeap,823.15,6248,7.59,671.48,1677.66,1677.66
+Mixed_Random,OptiHeap,3835.04,31248,8.15,3170.72,7811.83,7811.83
+Small_Fragmentation,OptiHeap,25.79,400000,15509.28,0.52,99.21,99.21
+Medium_Fragmentation,OptiHeap,59.34,40000,674.14,32.71,634.49,634.49
+Large_Fragmentation,OptiHeap,277.17,4000,14.43,283.07,563.62,563.62
