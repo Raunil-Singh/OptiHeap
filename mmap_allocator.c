@@ -9,8 +9,8 @@
 
 struct mmap_memory_list mmap_list;
 
-#ifdef THREAD_SAFE
-static pthread_mutex_t mmap_mutex = PTHREAD_MUTEX_INITIALIZER;
+#ifdef OPTIHEAP_THREAD_SAFE
+pthread_mutex_t mmap_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
 /*
@@ -20,12 +20,12 @@ static pthread_mutex_t mmap_mutex = PTHREAD_MUTEX_INITIALIZER;
  */
 
 void mmap_allocator_init() {
-    #ifdef THREAD_SAFE
+    #ifdef OPTIHEAP_THREAD_SAFE
     pthread_mutex_lock(&mmap_mutex);
     #endif
     memset(&mmap_list, 0, sizeof(struct mmap_memory_list));
     mmap_list.page_size = sysconf(_SC_PAGESIZE);
-    #ifdef THREAD_SAFE
+    #ifdef OPTIHEAP_THREAD_SAFE
     pthread_mutex_unlock(&mmap_mutex);
     #endif
 }
@@ -80,7 +80,7 @@ void* allocate_mmap_block(size_t requested_size)
         return NULL;
     }
 
-    #ifdef THREAD_SAFE
+    #ifdef OPTIHEAP_THREAD_SAFE
     pthread_mutex_lock(&mmap_mutex);
     #endif
 
@@ -112,7 +112,7 @@ void* allocate_mmap_block(size_t requested_size)
     allocation_ptr = (void *)(new_block + 1);
 
     END:
-    #ifdef THREAD_SAFE
+    #ifdef OPTIHEAP_THREAD_SAFE
     pthread_mutex_unlock(&mmap_mutex);
     #endif
     return allocation_ptr; 
@@ -135,7 +135,7 @@ void* free_mmap_block(void *ptr)
     void * status = NULL; // Default to NULL for successful deallocation
     struct memory_header *block = (struct memory_header *)ptr - 1; // Get the header from the pointer
 
-    #ifdef THREAD_SAFE
+    #ifdef OPTIHEAP_THREAD_SAFE
     pthread_mutex_lock(&mmap_mutex);
     #endif
 
@@ -149,7 +149,7 @@ void* free_mmap_block(void *ptr)
     if(curr) {
         if (curr->magic != MMAP_ALLOCATED) {
             fprintf(stderr, "Error: Attempt to free a block that is not allocated or has been corrupted.\n");
-            #ifdef THREAD_SAFE
+            #ifdef OPTIHEAP_THREAD_SAFE
             pthread_mutex_unlock(&mmap_mutex);
             #endif
             status = DEALLOCATION_FAILED;
@@ -179,7 +179,7 @@ void* free_mmap_block(void *ptr)
     #endif
 
     END:
-    #ifdef THREAD_SAFE
+    #ifdef OPTIHEAP_THREAD_SAFE
     pthread_mutex_unlock(&mmap_mutex);
     #endif
     return status;
@@ -189,7 +189,7 @@ void* free_mmap_block(void *ptr)
 void debug_print_mmap([[maybe_unused]]int debug_id)
 {
     #ifdef OPTIHEAP_DEBUGGER
-    #ifdef THREAD_SAFE
+    #ifdef OPTIHEAP_THREAD_SAFE
     pthread_mutex_lock(&mmap_mutex);
     #endif
     struct memory_header *curr = mmap_list.head;
@@ -204,7 +204,7 @@ void debug_print_mmap([[maybe_unused]]int debug_id)
         curr = curr->next;
     }
     printf("================================================================= END DEBUG_ID : %d\n", debug_id);
-    #ifdef THREAD_SAFE
+    #ifdef OPTIHEAP_THREAD_SAFE
     pthread_mutex_unlock(&mmap_mutex);
     #endif
     #else
