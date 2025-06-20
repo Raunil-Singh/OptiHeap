@@ -124,7 +124,6 @@ Results saved to: combined_benchmark_results.csv
 -rw-rw-r-- 1 raunil-singh raunil-singh 1.6K Jun 19 02:13 combined_benchmark_results.csv
 
 Benchmark suite completed!
-You can now use the CSV files to generate graphs for your GitHub repo.
 
 Cleaning up executables...
 Cleanup completed.

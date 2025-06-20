@@ -245,7 +245,6 @@ ls -lh benchmark_results_*.csv combined_benchmark_results.csv 2>/dev/null || ech
 
 echo
 echo -e "${GREEN}Benchmark suite completed!${NC}"
-echo -e "${BLUE}You can now use the CSV files to generate graphs for your GitHub repo.${NC}"
 
 # Cleanup executables
 echo
