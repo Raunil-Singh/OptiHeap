@@ -9,7 +9,7 @@
 #include <stdint.h>
 // #define USE_OPTIHEAP // FLAG to use OptiHeap allocator
 #ifdef USE_OPTIHEAP
-#include "optiheap_allocator.h"
+#include "../include/optiheap_allocator.h"
 #define MALLOC(size) optiheap_allocate(size)
 #define FREE(ptr) optiheap_free(ptr)
 #define ALLOCATOR_NAME "OptiHeap"

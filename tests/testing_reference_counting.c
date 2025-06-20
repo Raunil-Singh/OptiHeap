@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <assert.h>
-#include "optiheap_allocator.h"
+#include "../include/optiheap_allocator.h"
 
 static int destructor_called = 0;
 

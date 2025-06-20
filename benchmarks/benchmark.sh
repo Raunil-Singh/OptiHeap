@@ -30,22 +30,22 @@ if [ ! -f "$BENCHMARK_SOURCE" ]; then
     exit 1
 fi
 
-if [ ! -f "optiheap_allocator.c" ]; then
+if [ ! -f "../src/optiheap_allocator.c" ]; then
     echo -e "${RED}Error: optiheap_allocator.c not found!${NC}"
     exit 1
 fi
 
-if [ ! -f "heap_allocator.c" ]; then
+if [ ! -f "../src/heap_allocator.c" ]; then
     echo -e "${RED}Error: heap_allocator.c not found!${NC}"
     exit 1
 fi
 
-if [ ! -f "mmap_allocator.c" ]; then
+if [ ! -f "../src/mmap_allocator.c" ]; then
     echo -e "${RED}Error: mmap_allocator.c not found!${NC}"
     exit 1
 fi
 
-if [ ! -f "optiheap_allocator.h" ]; then
+if [ ! -f "../include/optiheap_allocator.h" ]; then
     echo -e "${RED}Error: optiheap_allocator.h not found!${NC}"
     exit 1
 fi
@@ -73,7 +73,7 @@ echo
 
 # Compile OptiHeap version
 echo -e "${YELLOW}Compiling OptiHeap benchmark...${NC}"
-gcc "$BENCHMARK_SOURCE" optiheap_allocator.c heap_allocator.c mmap_allocator.c \
+gcc "$BENCHMARK_SOURCE" ../src/optiheap_allocator.c ../src/heap_allocator.c ../src/mmap_allocator.c \
     -o "$OPTIHEAP_EXECUTABLE" -O2 -std=c99 -Wall -Wextra -DUSE_OPTIHEAP
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}OptiHeap benchmark compiled successfully.${NC}"

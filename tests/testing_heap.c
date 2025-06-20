@@ -1,4 +1,4 @@
-#include "heap_allocator.h"
+#include "../src/heap_allocator.h"
 #include <stdio.h>
 
 int main()
