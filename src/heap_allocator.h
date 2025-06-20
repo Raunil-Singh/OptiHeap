@@ -7,9 +7,9 @@
 #include <stddef.h>
 #include "memory_structs.h"
 
-#define NUM_SIZE_CLASSES 11 // Number of free lists for different sizes
+#define NUM_SIZE_CLASSES 11 // Number of free lists in the segregated free list system
 
-// Class sizes: 0: 96, 1: 192, 2: 384, 3: 768, 4: 1536, 5: 3072, 6: 6144, 7: 12288, 8: 24576, 9: 49152, 10: 98304
+// Class sizes-> 0: 96, 1: 192, 2: 384, 3: 768, 4: 1536, 5: 3072, 6: 6144, 7: 12288, 8: 24576, 9: 49152, 10: 98304
 
 struct heap_memory_list {
     struct memory_header *head; // First block in all-blocks list
