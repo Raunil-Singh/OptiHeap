@@ -26,6 +26,11 @@ struct heap_memory_list {
 
 extern struct heap_memory_list heap_list;
 
+#ifdef OPTIHEAP_THREAD_SAFE
+#include <pthread.h>
+extern pthread_mutex_t heap_mutex; // Mutex for thread safety
+#endif
+
 void heap_allocator_init(void);
 void* allocate_heap_block(size_t size);
 void* free_heap_block(void* ptr);

@@ -14,4 +14,4 @@ void* optiheap_release(void *ptr);
 size_t optiheap_reference_count(void *ptr);
 int optiheap_verify_reference_counting(void);
 
-#endif
+#endif // OPTIHEAP

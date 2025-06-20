@@ -16,6 +16,10 @@ struct memory_header {
     struct memory_header *prev; // Prev in all-blocks list
     struct memory_header *next_free; // Next in free list
     struct memory_header *prev_free; // Prev in free list
+    #ifdef OPTIHEAP_REFERENCE_COUNTING
+    size_t ref_count; // Reference count for the block
+    void (*destructor)(void *); // Destructor function for the block
+    #endif
 };
 
 #endif // MEMORY_STRUCTS_H

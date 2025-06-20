@@ -67,6 +67,17 @@ void remove_from_mmap_list(struct memory_header *block) {
     }
 }
 
+int present_in_mmap_list(struct memory_header *ptr)
+{
+    struct memory_header *curr = mmap_list.head;
+    while (curr) {
+        if ((curr) == ptr) {
+            return 1; // Pointer is present in the mmap list
+        }
+        curr = curr->next;
+    }
+    return 0; // Pointer not found in the mmap list
+}
 
 /*
  * Allocate a memory block using mmap.
@@ -141,13 +152,8 @@ void* free_mmap_block(void *ptr)
 
     #ifdef OPTIHEAP_DEBUGGER
 
-    struct memory_header *curr = mmap_list.head;
-    while(curr && curr != block) {
-        curr = curr->next;
-    }
-
-    if(curr) {
-        if (curr->magic != MMAP_ALLOCATED) {
+    if(present_in_mmap_list(block)) {
+        if (block->magic != MMAP_ALLOCATED) {
             fprintf(stderr, "Error: Attempt to free a block that is not allocated or has been corrupted.\n");
             #ifdef OPTIHEAP_THREAD_SAFE
             pthread_mutex_unlock(&mmap_mutex);
@@ -157,16 +163,20 @@ void* free_mmap_block(void *ptr)
         }
 
         // Remove the block from the mmap list
-        remove_from_mmap_list(curr);
+        remove_from_mmap_list(block);
 
         // Unmap the memory
-        if (munmap(curr, curr->size + sizeof(struct memory_header)) == -1) {
+        if (munmap(block, block->size + sizeof(struct memory_header)) == -1) {
             fprintf(stderr, "Error: munmap failed to deallocate memory.\n");
             status =  DEALLOCATION_FAILED; // Indicate failure
             goto END;
         }
     }
-    else status = DEALLOCATION_FAILED;
+    else
+    {
+        status = DEALLOCATION_FAILED;
+        fprintf(stderr, "Error: Attempt to free a pointer %p is not present in the memory, either it has already been freed or was never allocated by mmap.\n", ptr);
+    }
     
     #else
     
