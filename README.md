@@ -6,13 +6,61 @@
 
 ## Features
 
-- Hybrid allocation: `heap` for small blocks, `mmap` for large ones
-- Optional reference counting with `retain` / `release` APIs with destructor support
-- Thread-safe mode with `pthread_mutex` locking
-- Heap and mmap state visualization via debug printing
-- Elaborate error messages that ease the process of debugging
-- Benchmarking against `glibc malloc`
-- Fully modular and easy to extend
+OptiHeap brings together modern memory management strategies into a modular, high-performance allocator suitable for both low-latency and high-throughput environments.
+
+### 🔀 Hybrid Allocation Strategy
+- Uses **heap allocation** (via `sbrk`) for small and medium-sized blocks for faster performance.
+- Falls back to **mmap-based allocation** for large blocks to avoid heap fragmentation and support memory locality for big data structures.
+- Dynamically selects the optimal strategy based on a tunable threshold (`MAX_HEAP_ALLOC_SIZE`).
+
+### 🧠 Smart Pointer–like Reference Counting (Optional)
+- Implements a **retain/release model** with atomic reference counters and custom destructors.
+- Prevents accidental memory leaks by ensuring blocks are freed when no longer referenced.
+- `optiheap_reference_count`, `optiheap_set_destructor` APIs allow deep control over object lifecycle.
+
+### 🧵 Thread Safety (Optional)
+- Fully thread-safe when compiled with `-DOPTIHEAP_THREAD_SAFE`.
+- Internally guarded by `pthread_mutex` around critical regions in heap and mmap operations.
+- No additional locking overhead when thread-safety is disabled.
+
+### 🧩 Modular Architecture
+- Clean separation of heap, mmap, reference counting, and orchestration logic.
+- Easy to extend for:
+  - Custom page allocators
+  - Garbage collection schemes
+  - Arena-based designs
+
+### 🛠️ Debugging and Safety
+- Compile with `-DOPTIHEAP_DEBUGGER` to enable extensive runtime checks.
+- Includes:
+  - Magic bytes for corruption detection
+  - Leak detection with reference counter audits
+  - Debug logs with allocation state, memory boundaries, and block info
+- Helpful during development and unit testing to catch hard-to-find bugs.
+
+### 🔍 Visual Inspection Tools
+- Built-in `debug_print_heap()` and `debug_print_mmap()` allow developers to inspect internal memory state on demand.
+- Prints block states, addresses, sizes, and allocation metadata.
+
+### 🧪 Benchmarking Infrastructure
+- Compare performance with `glibc malloc` using bundled benchmark suite.
+- Tracks:
+  - Throughput (allocs/sec)
+  - Peak memory
+  - Fragmentation
+- CSV export and plots for easy visualization and trend tracking.
+
+### 🔄 Safe Deallocation and Coalescing
+- Heap allocator aggressively coalesces adjacent free blocks to minimize fragmentation.
+- Safely rejects invalid or corrupted pointers with verbose error output.
+
+### ⚙️ Compile-Time Feature Flags
+- Fully customizable builds using Makefile flags:
+  - `OPTIHEAP_REFERENCE_COUNTING`
+  - `OPTIHEAP_THREAD_SAFE`
+  - `OPTIHEAP_DEBUGGER`
+- Compile lean-and-fast builds for production, or safe-and-verbose builds for dev/test.
+
 
 ---
 
