@@ -90,4 +90,4 @@ The library has seen a series of improvements to achieve the desired performance
 
 The repository also contains some profiling data done with `perf`.
 
-[You can check that here](perf_data/perf.data)
+[You can checkout the profiling data here](perf_data/perf.data)
