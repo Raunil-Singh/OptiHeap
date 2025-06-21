@@ -10,7 +10,7 @@
  * This function locks the appropriate mutex based on the type of memory block (heap or mmap).
  * It returns a pointer to the mutex that was locked.
  */
-pthread_mutex_t * optiheap_lock(struct memory_header *block)
+pthread_mutex_t * optiheap_lock([[maybe_unused]]struct memory_header *block)
 {
     pthread_mutex_t *mutex = NULL;
     #ifdef OPTIHEAP_THREAD_SAFE
@@ -30,7 +30,7 @@ pthread_mutex_t * optiheap_lock(struct memory_header *block)
  * This function unlocks the mutex that was previously locked by optiheap_lock.
  * It takes a pointer to the mutex as an argument.
  */
-void optiheap_unlock(pthread_mutex_t *mutex)
+void optiheap_unlock([[maybe_unused]]pthread_mutex_t *mutex)
 {
     #ifdef OPTIHEAP_THREAD_SAFE
     pthread_mutex_unlock(mutex);
@@ -42,7 +42,7 @@ void optiheap_unlock(pthread_mutex_t *mutex)
  * This function retains a pointer to a previously allocated block of memory.
  * It increments the reference count of the block to indicate the increase in ownership.
  */
-void optiheap_retain(void *ptr)
+void optiheap_retain([[maybe_unused]]void *ptr)
 {
     #ifdef OPTIHEAP_REFERENCE_COUNTING
     struct memory_header *block = (struct memory_header *)ptr - 1;
@@ -87,7 +87,7 @@ void optiheap_retain(void *ptr)
  * This function releases a pointer to a previously allocated block of memory.
  * It decrements the reference count of the block and frees it if the count reaches zero.
  */
-void * optiheap_release(void *ptr)
+void * optiheap_release([[maybe_unused]]void *ptr)
 {
     #ifdef OPTIHEAP_REFERENCE_COUNTING
     struct memory_header *block = (struct memory_header *)ptr - 1;
@@ -135,7 +135,7 @@ void * optiheap_release(void *ptr)
  * This function checks if a pointer is retained, i.e., if its reference count is greater than zero.
  * It returns 1 if the pointer is retained, otherwise returns 0.
  */
-size_t optiheap_reference_count(void *ptr)
+size_t optiheap_reference_count([[maybe_unused]]void *ptr)
 {
     #ifdef OPTIHEAP_REFERENCE_COUNTING
     struct memory_header *block = (struct memory_header *)ptr - 1;
@@ -166,7 +166,7 @@ size_t optiheap_reference_count(void *ptr)
 /*
  * This function sets a destructor for a pointer to a previously allocated block of memory.
  */
-void optiheap_set_destructor(void *ptr, void (*destructor)(void *))
+void optiheap_set_destructor([[maybe_unused]]void *ptr, [[maybe_unused]]void (*destructor)(void *))
 {
     #ifdef OPTIHEAP_REFERENCE_COUNTING
     struct memory_header *block = (struct memory_header *)ptr - 1;
