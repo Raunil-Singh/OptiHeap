@@ -74,8 +74,6 @@ OptiHeap brings together modern memory management strategies into a modular, hig
 | `reference_counting.c` | Smart-pointer-like layer (optional) |
 | `memory_structs.h`     | Common memory header with metadata, magic bytes, and links |
 
-[Full architecture documentation](docs/architecture.md)
-
 ---
 
 ## Installation
