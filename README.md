@@ -68,7 +68,8 @@ OptiHeap brings together modern memory management strategies into a modular, hig
 
 | Module | Responsibility |
 |--------|----------------|
-| `optiheap_allocator.c` | Top-level API. Routes requests to heap or mmap allocator |
+| `optiheap_allocator.h` | Lists all the APIs available |
+| `optiheap_allocator.c` | Routes requests to heap or mmap allocator |
 | `heap_allocator.c`     | Manages small blocks via segregated free lists |
 | `mmap_allocator.c`     | Handles large allocations with page-aligned `mmap()` |
 | `reference_counting.c` | Smart-pointer-like layer (optional) |
